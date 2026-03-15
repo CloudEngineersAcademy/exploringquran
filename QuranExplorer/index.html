@@ -934,13 +934,23 @@
             }
         }
 
+        // Reciter mapping to API codes
+        const reciterMap = {
+            'mishary': 'ar.alafasy',
+            'sudais': 'ar.sudais',
+            'minshawi': 'ar.minshawi',
+            'husary': 'ar.husary',
+            'muaiqly': 'ar.muaiqly'
+        };
+
         // Play Ayah Audio
         function playAyah(surah, ayah) {
             const audioElement = document.getElementById('audioElement');
-            const reciter = document.getElementById('reciterSelect').value;
+            const reciterValue = document.getElementById('reciterSelect').value;
+            const reciterCode = reciterMap[reciterValue] || 'ar.alafasy';
             
             // Audio URL format: https://cdn.islamic.network/quran/audio/128/{reciter}/{surah}{ayah}.mp3
-            const audioUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${surah.toString().padStart(3, '0')}${ayah.toString().padStart(3, '0')}.mp3`;
+            const audioUrl = `https://cdn.islamic.network/quran/audio/128/${reciterCode}/${surah.toString().padStart(3, '0')}${ayah.toString().padStart(3, '0')}.mp3`;
             
             audioElement.src = audioUrl;
             audioElement.play();
