@@ -952,12 +952,20 @@
             // Audio URL format: https://cdn.islamic.network/quran/audio/128/{reciter}/{surah}{ayah}.mp3
             const audioUrl = `https://cdn.islamic.network/quran/audio/128/${reciterCode}/${surah.toString().padStart(3, '0')}${ayah.toString().padStart(3, '0')}.mp3`;
             
+            // Debug logging
+            console.log('Playing audio:');
+            console.log('Surah:', surah, 'Ayah:', ayah);
+            console.log('Reciter value:', reciterValue);
+            console.log('Reciter code:', reciterCode);
+            console.log('Audio URL:', audioUrl);
+            
             audioElement.src = audioUrl;
             
             // Add error handling
-            audioElement.onerror = function() {
+            audioElement.onerror = function(error) {
                 console.error('Failed to load audio:', audioUrl);
-                alert('Unable to load audio. This might be a network issue or the audio file may not be available for this verse.');
+                console.error('Error details:', error);
+                alert('Unable to load audio. URL: ' + audioUrl + '\n\nThis might be a network issue or the audio file may not be available.');
                 document.querySelector('#playPauseBtn i').className = 'fas fa-play';
                 isPlaying = false;
             };
@@ -967,7 +975,7 @@
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
                     console.error('Play error:', error);
-                    alert('Cannot play audio at this moment. Please try again.');
+                    alert('Cannot play audio. Error: ' + error.message);
                 });
             }
             
