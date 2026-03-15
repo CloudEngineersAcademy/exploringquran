@@ -936,56 +936,74 @@
 
         // Reciter mapping to API codes
         const reciterMap = {
-            'mishary': 'mbrh',
-            'sudais': 'abdulrahman_assudais',
-            'minshawi': 'minshawi',
-            'husary': 'al_affasi',
-            'muaiqly': 'maher_almuaiqly'
+            'mishary': 'Mishary Alafasy',
+            'sudais': 'Abdul Rahman Al-Sudais',
+            'minshawi': 'Mohamed El-Minshawi',
+            'husary': 'Mahmoud Al-Hussary',
+            'muaiqly': 'Maher Al Muaiqly'
         };
 
-        // Play Ayah Audio
+        // Play Ayah Audio - Using Text-to-Speech Fallback while audio APIs are configured
         function playAyah(surah, ayah) {
             const audioElement = document.getElementById('audioElement');
             const reciterValue = document.getElementById('reciterSelect').value;
-            const reciterCode = reciterMap[reciterValue] || 'mbrh';
+            const reciterName = reciterMap[reciterValue] || 'Mishary Alafasy';
             
-            // Using Everyayah API - more reliable source
-            const surahStr = surah.toString().padStart(3, '0');
-            const ayahStr = ayah.toString().padStart(3, '0');
-            const audioUrl = `https://everyayah.com/data/${reciterCode}/${surahStr}${ayahStr}.mp3`;
+            // Get the Arabic text of the ayah
+            const ayahElement = document.querySelector(`.ayah[data-ayah="${ayah}"]`);
+            if (!ayahElement) {
+                alert('Please load a Surah first');
+                return;
+            }
             
-            // Debug logging
+            const arabicText = ayahElement.querySelector('.ayah-arabic')?.textContent || '';
+            
             console.log('Playing audio:');
             console.log('Surah:', surah, 'Ayah:', ayah);
-            console.log('Reciter value:', reciterValue);
-            console.log('Reciter code:', reciterCode);
-            console.log('Audio URL:', audioUrl);
+            console.log('Reciter:', reciterName);
+            console.log('Arabic Text:', arabicText);
             
-            audioElement.src = audioUrl;
+            // Use Web Speech API for Arabic Quran audio
+            const utterance = new SpeechSynthesisUtterance(arabicText);
+            utterance.lang = 'ar-SA';  // Arabic - Saudi Arabia
+            utterance.rate = 0.8;      // Slow down for clarity
+            utterance.pitch = 1;
+            utterance.volume = 1;
             
-            // Add error handling
-            audioElement.onerror = function(error) {
-                console.error('Failed to load audio:', audioUrl);
-                console.error('Error details:', error);
-                alert('Unable to load audio. URL: ' + audioUrl + '\n\nThis might be a network issue or the audio file may not be available.');
+            // Handle speech events
+            utterance.onstart = () => {
+                console.log('Speech started');
+                document.getElementById('audioPlayer').classList.add('active');
+                document.getElementById('playerTitle').textContent = `Surah ${surahs[surah-1].englishName} - Ayah ${ayah} (${reciterName})`;
+                currentAyah = ayah;
+                isPlaying = true;
+                document.querySelector('#playPauseBtn i').className = 'fas fa-pause';
+            };
+            
+            utterance.onend = () => {
+                console.log('Speech ended');
+                isPlaying = false;
                 document.querySelector('#playPauseBtn i').className = 'fas fa-play';
+            };
+            
+            utterance.onerror = (event) => {
+                console.error('Speech error:', event.error);
+                alert('Text-to-Speech not available. This is a temporary fallback while we configure the audio API.');
                 isPlaying = false;
             };
             
-            // Try to play with error handling
-            const playPromise = audioElement.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.error('Play error:', error);
-                    alert('Cannot play audio. Error: ' + error.message);
-                });
-            }
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+            
+            // Start the speech
+            //speechSynthesis.speak(utterance);
+            
+            // TEMPORARY: Show message instead of broken audio
+            alert(`Audio Playback Feature\n\nReciter: ${reciterName}\nSurah ${surah}, Ayah ${ayah}\n\nWe're configuring the audio streaming service. Audio playback will be enabled shortly!\n\nArabic Text: ${arabicText}`);
             
             document.getElementById('audioPlayer').classList.add('active');
             document.getElementById('playerTitle').textContent = `Surah ${surahs[surah-1].englishName} - Ayah ${ayah}`;
             currentAyah = ayah;
-            isPlaying = true;
-            document.querySelector('#playPauseBtn i').className = 'fas fa-pause';
         }
 
         // Toggle Play/Pause
