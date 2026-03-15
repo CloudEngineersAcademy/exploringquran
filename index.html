@@ -936,21 +936,23 @@
 
         // Reciter mapping to API codes
         const reciterMap = {
-            'mishary': 'ar.alafasy',
-            'sudais': 'ar.abdurrahmaansudais',
-            'minshawi': 'ar.minshawi',
-            'husary': 'ar.husary',
-            'muaiqly': 'ar.muaiqly'
+            'mishary': 'mbrh',
+            'sudais': 'abdulrahman_assudais',
+            'minshawi': 'minshawi',
+            'husary': 'al_affasi',
+            'muaiqly': 'maher_almuaiqly'
         };
 
         // Play Ayah Audio
         function playAyah(surah, ayah) {
             const audioElement = document.getElementById('audioElement');
             const reciterValue = document.getElementById('reciterSelect').value;
-            const reciterCode = reciterMap[reciterValue] || 'ar.alafasy';
+            const reciterCode = reciterMap[reciterValue] || 'mbrh';
             
-            // Audio URL format: https://cdn.islamic.network/quran/audio/128/{reciter}/{surah}{ayah}.mp3
-            const audioUrl = `https://cdn.islamic.network/quran/audio/128/${reciterCode}/${surah.toString().padStart(3, '0')}${ayah.toString().padStart(3, '0')}.mp3`;
+            // Using Everyayah API - more reliable source
+            const surahStr = surah.toString().padStart(3, '0');
+            const ayahStr = ayah.toString().padStart(3, '0');
+            const audioUrl = `https://everyayah.com/data/${reciterCode}/${surahStr}${ayahStr}.mp3`;
             
             // Debug logging
             console.log('Playing audio:');
