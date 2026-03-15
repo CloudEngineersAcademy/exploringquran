@@ -953,7 +953,23 @@
             const audioUrl = `https://cdn.islamic.network/quran/audio/128/${reciterCode}/${surah.toString().padStart(3, '0')}${ayah.toString().padStart(3, '0')}.mp3`;
             
             audioElement.src = audioUrl;
-            audioElement.play();
+            
+            // Add error handling
+            audioElement.onerror = function() {
+                console.error('Failed to load audio:', audioUrl);
+                alert('Unable to load audio. This might be a network issue or the audio file may not be available for this verse.');
+                document.querySelector('#playPauseBtn i').className = 'fas fa-play';
+                isPlaying = false;
+            };
+            
+            // Try to play with error handling
+            const playPromise = audioElement.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.error('Play error:', error);
+                    alert('Cannot play audio at this moment. Please try again.');
+                });
+            }
             
             document.getElementById('audioPlayer').classList.add('active');
             document.getElementById('playerTitle').textContent = `Surah ${surahs[surah-1].englishName} - Ayah ${ayah}`;
