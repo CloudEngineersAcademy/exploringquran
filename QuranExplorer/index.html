@@ -955,8 +955,8 @@
             // Later this can be enhanced to play specific ayahs if individual files are available
             const surahStr = surah.toString().padStart(3, '0');
             
-            // Use raw.githubusercontent.com for Git LFS file access
-            const baseUrl = 'https://raw.githubusercontent.com/CloudEngineersAcademy/exploringquran/main/audio';
+            // Use jsDelivr CDN for reliable GitHub file delivery
+            const baseUrl = 'https://cdn.jsdelivr.net/gh/CloudEngineersAcademy/exploringquran@main/audio';
             const audioUrl = `${baseUrl}/${reciterFolder}/${surahStr}.mp3`;
             
             console.log('Playing audio:');
