@@ -935,63 +935,73 @@
             }
         }
 
-        // Reciter mapping to API codes
-        // Reciter mapping for local GitHub-hosted files
+        // Reciter mapping to Al-Quran Cloud API identifiers
         const reciterMap = {
-            'alafasy': 'alafasy',
-            'abdulbasit': 'abdulbasit',
-            'sudais': 'sudais',
-            'minshawi': 'minshawi',
-            'husary': 'husary',
-            'muaiqly': 'muaiqly'
+            'alafasy': 'ar.alafasy',
+            'abdulbasit': 'ar.abdulbasitmurattal',
+            'sudais': 'ar.abdurrahmaansudais',
+            'minshawi': 'ar.minshawi',
+            'husary': 'ar.husary',
+            'ajmi': 'ar.ahmedajamy'
         };
 
-        // Play Ayah Audio from GitHub-hosted files
+        // Play Ayah Audio from Al-Quran Cloud API
         function playAyah(surah, ayah) {
             const audioElement = document.getElementById('audioElement');
             const reciterValue = document.getElementById('reciterSelect').value;
-            const reciterFolder = reciterMap[reciterValue] || 'alafasy';
+            const reciterId = reciterMap[reciterValue] || 'ar.alafasy';
             
-            // Audio file format: /audio/{reciter}/{surah}.mp3
-            // Note: For now, we play the entire Surah (first file)
-            // Later this can be enhanced to play specific ayahs if individual files are available
-            const surahStr = surah.toString().padStart(3, '0');
+            // Fetch audio from Al-Quran Cloud API
+            const apiUrl = `https://api.alquran.cloud/v1/surah/${surah}/${reciterId}`;
             
-            // Use jsDelivr CDN for reliable GitHub file delivery
-            const baseUrl = 'https://cdn.jsdelivr.net/gh/CloudEngineersAcademy/exploringquran@main/audio';
-            const audioUrl = `${baseUrl}/${reciterFolder}/${surahStr}.mp3`;
-            
-            console.log('Playing audio:');
+            console.log('Fetching audio metadata from Al-Quran Cloud API:');
             console.log('Surah:', surah, 'Ayah:', ayah);
-            console.log('Reciter folder:', reciterFolder);
-            console.log('Audio URL:', audioUrl);
+            console.log('Reciter ID:', reciterId);
+            console.log('API URL:', apiUrl);
             
-            audioElement.src = audioUrl;
-            
-            // Handle errors
-            audioElement.onerror = function() {
-                console.error('Failed to load audio:', audioUrl);
-                alert(`Audio file not found.\n\nExpected location: ${audioUrl}\n\nPlease ensure audio files are uploaded to the repository.\n\nSee: AUDIO_SETUP_GUIDE.md for instructions.`);
-                document.querySelector('#playPauseBtn i').className = 'fas fa-play';
-                isPlaying = false;
-            };
-            
-            // Handle successful loading and start playing
-            audioElement.oncanplay = function() {
-                console.log('Audio loaded and ready to play');
-                audioElement.play().catch(error => {
-                    console.error('Playback error:', error);
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200 && data.data.ayahs && data.data.ayahs[ayah - 1]) {
+                        const ayahData = data.data.ayahs[ayah - 1];
+                        const audioUrl = ayahData.audio;
+                        
+                        console.log('Audio URL:', audioUrl);
+                        
+                        audioElement.src = audioUrl;
+                        
+                        // Show player
+                        document.getElementById('audioPlayer').classList.add('active');
+                        const reciterName = document.getElementById('reciterSelect').options[document.getElementById('reciterSelect').selectedIndex].text;
+                        document.getElementById('playerTitle').textContent = `Surah ${surahs[surah-1].englishName} - Ayah ${ayah} (${reciterName})`;
+                        currentAyah = ayah;
+                        
+                        // Play audio
+                        audioElement.oncanplay = function() {
+                            console.log('Audio loaded and ready to play');
+                            audioElement.play().catch(error => {
+                                console.error('Playback error:', error);
+                            });
+                        };
+                        
+                        audioElement.onerror = function() {
+                            console.error('Failed to load audio:', audioUrl);
+                            alert('Error: Could not load audio. The API server might be temporarily unavailable.');
+                        };
+                        
+                        audioElement.load();
+                        isPlaying = true;
+                        document.querySelector('#playPauseBtn i').className = 'fas fa-pause';
+                    } else {
+                        throw new Error('Invalid API response');
+                    }
+                })
+                .catch(error => {
+                    console.error('API Error:', error);
+                    alert(`Error loading audio from Al-Quran Cloud API:\n\n${error.message}\n\nPlease try again later.`);
+                    document.querySelector('#playPauseBtn i').className = 'fas fa-play';
+                    isPlaying = false;
                 });
-            };
-            
-            // Load the audio
-            audioElement.load();
-            
-            document.getElementById('audioPlayer').classList.add('active');
-            document.getElementById('playerTitle').textContent = `Surah ${surahs[surah-1].englishName} - Ayah ${ayah}`;
-            currentAyah = ayah;
-            isPlaying = true;
-            document.querySelector('#playPauseBtn i').className = 'fas fa-pause';
         }
 
         // Toggle Play/Pause
