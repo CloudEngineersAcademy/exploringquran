@@ -1,0 +1,50 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Deploy to DigitalOcean droplet
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd /root/exploringquran
+            git pull origin main
+            docker compose down
+            docker build -t quran-explorer:latest .
+            docker compose up -d
+            
+            # Wait for health check
+            sleep 5
+            docker compose ps
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ Deployment to DigitalOcean failed. Check the workflow logs.'
+            })
+
+      - name: Notify on success
+        if: success()
+        run: echo "✅ Successfully deployed to DigitalOcean!"

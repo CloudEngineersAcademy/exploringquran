@@ -1,0 +1,24 @@
+[Unit]
+Description=Quran Explorer - Docker Container
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/exploringquran
+ExecStart=/usr/bin/docker compose up
+ExecStop=/usr/bin/docker compose down
+Restart=always
+RestartSec=10
+
+# Resource limits for $5 droplet
+MemoryLimit=512M
+CPUQuota=100%
+
+# Log settings
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
